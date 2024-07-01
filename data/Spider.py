@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-01 18:01:15
+LastEditTime: 2024-07-01 18:24:25
 FilePath: /ticket/Spider.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -76,7 +76,7 @@ class LotterySpider:
 
     def fetch_data(self, name, start, end):
         base_url = self.config['base_url']
-        url = base_url.format(name=name) + f"&start={start}&end={end}"
+        url = base_url.format(name=name) + f"?start={start}&end={end}"
         response = requests.get(url)
         if response.status_code == 200:
             return response.text
@@ -142,5 +142,5 @@ class LotterySpider:
                 self.logger.error(f"Error processing {name}: {e}")
 
 if __name__ == "__main__":
-    spider = LotterySpider('config.yaml', 'sqlite:///lottery.db')
+    spider = LotterySpider('config.yaml', 'sqlite:///data/lottery.db')
     spider.run()
