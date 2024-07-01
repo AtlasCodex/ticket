@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-01 17:44:17
+LastEditTime: 2024-07-01 18:01:15
 FilePath: /ticket/Spider.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -65,6 +65,10 @@ class LotterySpider:
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
         self.logger = Logger('config.yaml')  # 初始化日志记录器
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        })
 
     def load_config(self):
         with open(self.config_path, 'r', encoding='utf-8') as file:
@@ -93,8 +97,7 @@ class LotterySpider:
             if len(cols) == 16 or len(cols) == 15:  # Ensure the row has the expected number of columns
                 data.append(cols)
             else:
-                print(f"Skipping row with unexpected number of columns: {cols}")
-        
+                self.logger.error(f"Skipping row with unexpected number of columns: {cols}")
         return list(reversed(data))  # Reverse the data list before returning
 
 
@@ -115,6 +118,7 @@ class LotterySpider:
                 )
             session.merge(record)
         session.commit()
+        session.close()
 
     def get_last_issue(self, name):
         session = self.Session()
