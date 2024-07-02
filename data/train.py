@@ -2,22 +2,17 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 11:09:48
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-02 11:17:38
+LastEditTime: 2024-07-02 11:31:56
 FilePath: /ticket/data/train.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
 from model import LotteryModel
 import sys
-from logger import Logger
-
-# 初始化日志
-logger = Logger('config.yaml').logger
 
 def train_model(model, X, Y, model_save_path, config):
     model = model.build_model((config['time_step'], X.shape[2]))
     model.fit(X, Y, epochs=config['epochs'], batch_size=config['batch_size'], validation_split=config['validation_split'], verbose=1)
     model.save(model_save_path)
-    logger.info("Model trained and saved to %s", model_save_path)
     return model
 
 def train_ssq(lottery_model):

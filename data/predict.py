@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 11:10:13
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-02 11:14:07
+LastEditTime: 2024-07-02 11:26:50
 FilePath: /ticket/data/predict.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -11,17 +11,13 @@ from tensorflow.keras.models import load_model
 import os
 import sys
 
-from logger import Logger
 
-# 初始化日志
-logger = Logger('config.yaml').logger
-
-def load_model_file(model_path, logger):
+def load_model_file(lottery_model,model_path, logger):
     if os.path.exists(model_path):
-        logger.info("Loading model from %s", model_path)
+        lottery_model.logger.info("Loading model from %s", model_path)
         return load_model(model_path)
     else:
-        logger.warning("Model file %s not found.", model_path)
+        lottery_model.logger.warning("Model file %s not found.", model_path)
         return None
 
 def predict(model, X, scaler):
@@ -36,6 +32,7 @@ def predict_ssq(lottery_model):
     ssq_blue_model = load_model_file(lottery_model.ssq_config['blue']['model_path'], lottery_model.logger)
 
     if ssq_red_model and ssq_blue_model:
+        print("Predicting SSQ red and blue balls...",ssq_X_red[:-1],ssq_X_blue[:-1])
         ssq_red_predictions = predict(ssq_red_model, ssq_X_red, lottery_model.scaler_ssq_red)
         ssq_blue_predictions = predict(ssq_blue_model, ssq_X_blue, lottery_model.scaler_ssq_blue)
 
