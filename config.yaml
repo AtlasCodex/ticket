@@ -11,3 +11,34 @@ logging:
   max_bytes: 10485760  # 10MB
   backup_count: 5
 
+database:
+  db_url: 'sqlite:///lottery.db'
+
+ssq_model:
+  red:
+    model_path: 'model/ssq_red_model.h5'
+    time_step: 10
+    epochs: 100
+    batch_size: 64
+    validation_split: 0.1
+  blue:
+    model_path: 'model/ssq_blue_model.h5'
+    time_step: 10
+    epochs: 100
+    batch_size: 64
+    validation_split: 0.1
+
+dlt_model:
+  red:
+    model_path: 'model/dlt_red_model.h5'
+    time_step: 10
+    epochs: 100
+    batch_size: 64
+    validation_split: 0.1
+  blue:
+    model_path: 'model/dlt_blue_model.h5'
+    time_step: 10
+    epochs: 100
+    batch_size: 64
+    validation_split: 0.1
+

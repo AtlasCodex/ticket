@@ -2,3 +2,8 @@ requests
 beautifulsoup4
 PyYAML
 SQLAlchemy
+numpy
+pandas
+scikit-learn
+matplotlib
+tensorflow

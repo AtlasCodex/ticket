@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-01 16:49:53
+LastEditTime: 2024-07-02 10:42:52
 FilePath: /ticket/logger.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -49,7 +49,3 @@ class Logger:
 
     def critical(self, message):
         self.logger.critical(message)
-
-    def read_logs(self, log_file):
-        with open(log_file, 'r') as file:
-            return file.read()
