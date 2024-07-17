@@ -28,6 +28,7 @@ model_params:
     patience: 100
     bestmodel_paths: 'model/best_ssq_model.h5'
     finalmodel_paths: 'model/final_ssq_model.h5'
+    plot_save_path: 'static/images/ssq_accuracy_plot.png'
   dlt:
     window_size: 3
     lstm_units_1: 200
@@ -40,6 +41,7 @@ model_params:
     patience: 50
     bestmodel_paths: 'model/best_dlt_model.h5'
     finalmodel_paths: 'model/final_dlt_model.h5'
+    plot_save_path: 'static/images/dlt_accuracy_plot.png'
   kl8:
     window_size: 3
     lstm_units_1: 250
@@ -52,3 +54,4 @@ model_params:
     patience: 50
     bestmodel_paths: 'model/best_kl8_model.h5'
     finalmodel_paths: 'model/final_kl8_model.h5'
+    plot_save_path: 'static/images/kl8_accuracy_plot.png'

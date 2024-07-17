@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 00:12:31
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-17 15:56:44
+LastEditTime: 2024-07-17 18:37:00
 FilePath: /ticket/data/model.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -17,6 +17,8 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
+import os
 
 class LotteryPredictionModel:
     def __init__(self, config_path='config.yaml'):
@@ -111,7 +113,27 @@ class LotteryPredictionModel:
         history = self.train_model(X_train, X_val, y_train, y_val, lottery_type)
         self.evaluate_model(X_train, X_val, X_test, y_train, y_val, y_test)
         self.save_model(lottery_type)
+        self.plot_accuracy(history, lottery_type)
         return history
+
+    def plot_accuracy(self, history, lottery_type):
+        plt.figure(figsize=(12, 6))
+        plt.plot(history.history['accuracy'], label='Training Accuracy')
+        plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+        plt.title(f'{lottery_type.upper()} Model Accuracy')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.legend()
+
+        # Get the save path from the config
+        save_path = self.config['model_params'][lottery_type]['plot_save_path']
+        
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        
+        # Save the plot
+        plt.savefig(save_path)
+        plt.close()
 
 # 使用示例
 if __name__ == "__main__":

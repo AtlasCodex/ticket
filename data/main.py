@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 18:25:40
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-17 18:30:31
+LastEditTime: 2024-07-17 19:20:14
 FilePath: /ticket/data/main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -35,9 +35,9 @@ def main(args,config):
     model = LotteryPredictionModel()
     logger.info("训练模型任务...")
     model.run(matrix, args.type)
-    logger.info("预测任务...")
-    storage = LotteryPredictionStorage()
-    storage.run_predictions(args.type)
+    # logger.info("预测任务...")
+    # storage = LotteryPredictionStorage()
+    # storage.run_predictions(args.type)
     
 
        
