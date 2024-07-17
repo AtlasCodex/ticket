@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 18:25:40
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-17 16:46:59
+LastEditTime: 2024-07-17 18:30:31
 FilePath: /ticket/data/main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -27,8 +27,8 @@ def load_config(file_path):
 def main(args,config):
 
     # 爬取数据
-    # spider = LotterySpider(config)
-    # spider.run()
+    spider = LotterySpider(config)
+    spider.run()
     logger.info("双色球任务...")
     matrix = create_matrix_from_db(args.type)
     logger.info(matrix.shape)

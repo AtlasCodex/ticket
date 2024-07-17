@@ -66,13 +66,13 @@ class LotteryPredictor:
         if name == 'ssq':
             front_area = prediction[:33]
             back_area = prediction[33:]
-            front_indices = np.argsort(front_area)[::-1][:6]
-            back_indices = np.argsort(back_area)[::-1][:1]
+            front_indices = np.argsort(front_area)[::-1][:8]
+            back_indices = np.argsort(back_area)[::-1][:3]
         elif name == 'dlt':
             front_area = prediction[:35]
             back_area = prediction[35:]
-            front_indices = np.argsort(front_area)[::-1][:5]
-            back_indices = np.argsort(back_area)[::-1][:2]
+            front_indices = np.argsort(front_area)[::-1][:7]
+            back_indices = np.argsort(back_area)[::-1][:3]
         elif name == 'kl8':
             front_indices = np.argsort(prediction)[::-1][:20]
             back_indices = np.array([])

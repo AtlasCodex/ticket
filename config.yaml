@@ -23,37 +23,32 @@ model_params:
     dropout_rate: 0.4
     output_units: 49
     learning_rate: 0.0001
-    batch_size: 64
-    epochs: 8000
+    batch_size: 32
+    epochs: 1000
     patience: 100
     bestmodel_paths: 'model/best_ssq_model.h5'
     finalmodel_paths: 'model/final_ssq_model.h5'
   dlt:
-    window_size: 4
-    lstm_units_1: 150
-    lstm_units_2: 75
-    dropout_rate: 0.3
-    output_units: 35
-    learning_rate: 0.0002
+    window_size: 3
+    lstm_units_1: 200
+    lstm_units_2: 100
+    dropout_rate: 0.4
+    output_units: 47
+    learning_rate: 0.0001
     batch_size: 32
-    epochs: 5000
+    epochs: 1000
     patience: 50
     bestmodel_paths: 'model/best_dlt_model.h5'
     finalmodel_paths: 'model/final_dlt_model.h5'
   kl8:
-    window_size: 5
+    window_size: 3
     lstm_units_1: 250
     lstm_units_2: 125
     dropout_rate: 0.5
     output_units: 80
-    learning_rate: 0.0003
-    batch_size: 128
-    epochs: 10000
-    patience: 150
+    learning_rate: 0.0001
+    batch_size: 32
+    epochs: 1000
+    patience: 50
     bestmodel_paths: 'model/best_kl8_model.h5'
     finalmodel_paths: 'model/final_kl8_model.h5'
-
-model_paths:
-  ssq: 'path/to/ssq_model.h5'
-  dlt: 'path/to/dlt_model.h5'
-  kl8: 'path/to/kl8_model.h5'

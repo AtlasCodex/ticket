@@ -18,10 +18,6 @@ class PredictionResult(Base):
     back_numbers = Column(String)
     probabilities = Column(String, nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint('lottery_type', 'issue', name='uq_lottery_type_issue'),
-    )
-
 class LotteryPredictionStorage:
     def __init__(self, config_path='config.yaml'):
         self.config = self.load_config(config_path)
@@ -39,7 +35,7 @@ class LotteryPredictionStorage:
         session = self.Session()
         try:
             front_numbers_str = ','.join(map(str, front_numbers))
-            back_numbers_str = ','.join(map(str, back_numbers)) if back_numbers else None
+            back_numbers_str = ','.join(map(str, back_numbers))
             probabilities_str = ';'.join([f"{num}:{prob:.6f}" for num, prob in probabilities])
 
             prediction_data = {
