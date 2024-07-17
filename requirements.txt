@@ -6,4 +6,5 @@ numpy
 pandas
 scikit-learn
 matplotlib
-tensorflow
+tensorflow==2.15.0
+jinja2

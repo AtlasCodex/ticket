@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-02 10:42:52
+LastEditTime: 2024-07-17 16:12:36
 FilePath: /ticket/logger.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -11,7 +11,17 @@ from logging.handlers import RotatingFileHandler
 import yaml
 
 class Logger:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Logger, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self, config_file):
+        if hasattr(self, 'logger'):
+            return
+
         with open(config_file, 'r') as file:
             config = yaml.safe_load(file)
 
