@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-17 14:46:57
+LastEditTime: 2024-07-20 14:18:47
 FilePath: /ticket/Spider.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -117,7 +117,7 @@ class LotterySpider:
             table = soup.find("tbody", attrs={"id": "tdata"}).find_all("tr")
             if not table:
                 return []
-            rows = table[1:]
+            rows = table[0:]
             data = []
             for row in rows:
                 cols = row.find_all('td')
@@ -150,7 +150,6 @@ class LotterySpider:
 
     def save_to_db(self, name, data):
         try:
-            self.logger.info(f"Saving data to database: {data}")
             session = self.Session()
             inserted_or_updated_count = 0
             for entry in data: 
@@ -179,7 +178,7 @@ class LotterySpider:
                     continue
                 
                 # 检查是否已经存在具有相同 issue 的记录
-                existing_record = session.query(SSQ if name == 'ssq' else DLT).filter_by(issue=entry[0]).first()
+                existing_record = session.query(SSQ if name == 'ssq' else DLT if name == 'dlt' else KL8).filter_by(issue=entry[0]).first()
                 if existing_record:
                     # 更新现有记录
                     for key, value in record.__dict__.items():

@@ -1,295 +1,248 @@
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
-from typing import List, Tuple, Dict
-from logger import Logger  # 导入自定义的日志模块
-from Spider import SSQ, DLT, KL8
-from history import PredictionResult
 import yaml
+from sqlalchemy import create_engine, select,event
+from sqlalchemy.orm import sessionmaker
+from history import PredictionResult
+from logger import Logger
+from Spider import SSQ, DLT, KL8
+import pyemail as email
 
-
-class LotteryHitRateCalculator:
-    def __init__(self, config_path='config.yaml'):
+class LotteryAnalysis:
+    def __init__(self, config_path):
+        self.logger = Logger(config_path)
         self.config = self.load_config(config_path)
-        self.db_url = self.config['database']['db_url']
-        self.engine = create_engine(self.db_url)
-        self.Session = sessionmaker(bind=self.engine)
-        self.logger = Logger('config.yaml')  # 使用自定义的日志模块
-        
+        self.engine = create_engine(self.config['database']['db_url'])
+        # 添加事件监听器来捕获 SQL 语句
+        event.listen(self.engine, 'before_cursor_execute', self.log_sql)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+
     def load_config(self, config_path):
         with open(config_path, 'r') as file:
             return yaml.safe_load(file)
+    def log_sql(self, conn, cursor, statement, parameters, context, executemany):
+        self.logger.debug(f"Executing SQL: {statement}")
+        if parameters:
+            self.logger.debug(f"Parameters: {parameters}")
 
-    def calculate_hit_rate(self, lottery_type: str, issue: str) -> Dict:
-        session = self.Session()
-        try:
-            # 获取预测结果
-            prediction = session.execute(
-                select(PredictionResult).where(
-                    PredictionResult.lottery_type == lottery_type,
-                    PredictionResult.issue == issue
-                )
-            ).scalar_one_or_none()
-            if not prediction:
-                self.logger.warning(f"No prediction found for {lottery_type} issue {issue}")
-                return {}
-
-            # 获取实际开奖结果
-            actual_result = self._get_actual_result(session, lottery_type, issue)
-            if not actual_result:
-                self.logger.warning(f"No actual result found for {lottery_type} issue {issue}")
-                return {}
-
-            # 计算命中率
-            hit_rate = self._calculate_specific_hit_rate(
-                lottery_type, 
-                prediction.front_numbers.split(','),
-                prediction.back_numbers.split(',') if prediction.back_numbers else [],
-                actual_result
-            )
-            return hit_rate
-
-        except Exception as e:
-            self.logger.error(f"Error calculating hit rate: {e}")
-            return {}
-        finally:
-            session.close()
-
-    def _get_actual_result(self, session, lottery_type: str, issue: str) -> Tuple[List[str], List[str]]:
-        if lottery_type == 'ssq':
-            result = session.execute(select(SSQ).where(SSQ.issue == issue)).scalar_one_or_none()
-            if result:
-                return ([result.red1, result.red2, result.red3, result.red4, result.red5, result.red6], [result.blue])
-        elif lottery_type == 'dlt':
-            result = session.execute(select(DLT).where(DLT.issue == issue)).scalar_one_or_none()
-            if result:
-                return ([result.red1, result.red2, result.red3, result.red4, result.red5], [result.blue1, result.blue2])
-        elif lottery_type == 'kl8':
-            result = session.execute(select(KL8).where(KL8.issue == issue)).scalar_one_or_none()
-            if result:
-                return ([getattr(result, f'red{i}') for i in range(1, 21)], [])
-        return ([], [])
-
-    def _calculate_specific_hit_rate(self, lottery_type: str, predicted_front: List[str], predicted_back: List[str], actual: Tuple[List[str], List[str]]) -> Dict:
-        actual_front, actual_back = actual
-        hit_rate = {}
-
-        if lottery_type == 'ssq':
-            red_hits = len(set(predicted_front) & set(actual_front))
-            blue_hit = predicted_back[0] in actual_back
-            hit_rate['red_hits'] = red_hits
-            hit_rate['blue_hits'] = blue_hit
-            hit_rate['red_hit_rate'] = red_hits / 6
-            hit_rate['blue_hit_rate'] = 1 if blue_hit else 0
-            hit_rate['total_hit_rate'] = (red_hits + blue_hit) / 7
-            hit_rate['prize_level'] = self._get_ssq_prize_level(red_hits, blue_hit)
-
-        elif lottery_type == 'dlt':
-            red_hits = len(set(predicted_front) & set(actual_front))
-            blue_hits = len(set(predicted_back) & set(actual_back))
-            hit_rate['red_hits'] = red_hits
-            hit_rate['blue_hits'] = blue_hits
-            hit_rate['red_hit_rate'] = red_hits / 5
-            hit_rate['blue_hit_rate'] = blue_hits / 2
-            hit_rate['total_hit_rate'] = (red_hits + blue_hits) / 7
-            hit_rate['prize_level'] = self._get_dlt_prize_level(red_hits, blue_hits)
-
-        elif lottery_type == 'kl8':
-            hits = len(set(predicted_front) & set(actual_front))
-            hit_rate['hits'] = hits
-            hit_rate['hit_rate'] = hits / len(predicted_front)
-            hit_rate['prize_level'] = self._get_kl8_prize_level(hits, len(predicted_front))
-
-        return hit_rate
-
-    def _get_ssq_prize_level(self, red_hits: int, blue_hit: bool) -> str:
-        if red_hits == 6 and blue_hit:
-            return "一等奖"
-        elif red_hits == 6 and not blue_hit:
-            return "二等奖"
-        elif red_hits == 5 and blue_hit:
-            return "三等奖"
-        elif (red_hits == 5 and not blue_hit) or (red_hits == 4 and blue_hit):
-            return "四等奖"
-        elif (red_hits == 4 and not blue_hit) or (red_hits == 3 and blue_hit):
-            return "五等奖"
-        elif blue_hit:
-            return "六等奖"
-        else:
-            return "未中奖"
-
-    def _get_dlt_prize_level(self, red_hits: int, blue_hits: int) -> str:
-        if red_hits == 5 and blue_hits == 2:
-            return "一等奖"
-        elif red_hits == 5 and blue_hits == 1:
-            return "二等奖"
-        elif red_hits == 5 or (red_hits == 4 and blue_hits == 2):
-            return "三等奖"
-        elif (red_hits == 4 and blue_hits == 1) or (red_hits == 3 and blue_hits == 2):
-            return "四等奖"
-        elif red_hits == 4 or (red_hits == 3 and blue_hits == 1) or (red_hits == 2 and blue_hits == 2):
-            return "五等奖"
-        elif (red_hits == 3) or (red_hits == 2 and blue_hits == 1) or (red_hits == 1 and blue_hits == 2) or blue_hits == 2:
-            return "六等奖"
-        else:
-            return "未中奖"
-        
-    def _get_kl8_prize_level(self, hits: int, selected: int) -> str:
-        if selected == 10:
-                if hits == 10:
-                    return "一等奖"
-                elif hits == 9 or hits == 0:
-                    return "二等奖"
-                elif hits == 8 or hits == 1:
-                    return "三等奖"
-                elif hits == 7 or hits == 2:
-                    return "四等奖"
-                elif hits == 6 or hits == 3:
-                    return "五等奖"
-                elif hits == 5 or hits == 4:
-                    return "六等奖"
-                else:
-                    return "未中奖"
-        elif selected == 9:
-                if hits == 9:
-                    return "一等奖"
-                elif hits == 8 or hits == 0:
-                    return "二等奖"
-                elif hits == 7 or hits == 1:
-                    return "三等奖"
-                elif hits == 6 or hits == 2:
-                    return "四等奖"
-                elif hits == 5 or hits == 3:
-                    return "五等奖"
-                elif hits == 4 or hits == 4:
-                    return "六等奖"
-                else:
-                    return "未中奖"
-            
-        elif selected == 8:
-                if hits == 8:
-                    return "一等奖"
-                elif hits == 7 or hits == 0:
-                    return "二等奖"
-                elif hits == 6 or hits == 1:
-                    return "三等奖"
-                elif hits == 5 or hits == 2:
-                    return "四等奖"
-                elif hits == 4 or hits == 3:
-                    return "五等奖"
-                elif hits == 3 or hits == 4:
-                    return "六等奖"
-                else:
-                    return "未中奖"
-        elif selected == 7:
-                if hits == 7:
-                    return "一等奖"
-                elif hits == 6 or hits == 0:
-                    return "二等奖"
-                elif hits == 5 or hits == 1:
-                    return "三等奖"
-                elif hits == 4 or hits == 2:
-                    return "四等奖"
-                elif hits == 3 or hits == 3:
-                    return "五等奖"
-                elif hits == 2 or hits == 4:
-                    return "六等奖"
-                else:
-                    return "未中奖"
-        elif selected == 6:
-                if hits == 6:
-                    return "一等奖"
-                elif hits == 5 or hits == 0:
-                    return "二等奖"
-                elif hits == 4 or hits == 1:
-                    return "三等奖"
-                elif hits == 3 or hits == 2:
-                    return "四等奖"
-                elif hits == 2 or hits == 3:
-                    return "五等奖"
-                elif hits == 1 or hits == 4:
-                    return "六等奖"
-                else:
-                    return "未中奖"
-        elif selected == 5:
-                if hits == 5:
-                    return "一等奖"
-                elif hits == 4 or hits == 0:
-                    return "二等奖"
-                elif hits == 3 or hits == 1:
-                    return "三等奖"
-                else:
-                    return "未中奖"
-        elif selected == 4:
-                if hits == 4:
-                    return "一等奖"
-                else:
-                    return "未中奖"
-        elif selected == 3:
-                if hits == 3:
-                    return "一等奖"
-                else:
-                    return "未中奖"
-        elif selected == 2:
-                if hits == 2:
-                    return "一等奖"
-                else:
-                    return "未中奖"
-        elif selected == 1:
-                if hits == 1:
-                    return "一等奖"
-                else:
-                    return "未中奖"
-        else:
-            return "未中奖"
+    def get_prediction(self, lottery_type, issue):
+        stmt = select(PredictionResult).where(
+            PredictionResult.lottery_type == lottery_type,
+            PredictionResult.issue == issue
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
     
+    def get_latest_issue_prediction(self, lottery_type):
+        stmt = select(PredictionResult).where(
+            PredictionResult.lottery_type == lottery_type
+        ).order_by(PredictionResult.issue.desc()).limit(1)
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def get_actual_result(self, lottery_type, issue):
+        table = {'ssq': SSQ, 'dlt': DLT, 'kl8': KL8}[lottery_type]
+        stmt = select(table).where(table.issue == issue)
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def compare_numbers(self, predicted, actual, num_front, num_back=None):
+        def to_int_set(numbers, count):
+            return set(int(num) for num in numbers[:count])
+
+        pred_front = to_int_set(predicted, num_front)
+        actual_front = to_int_set(actual, num_front)
+        matched_front = pred_front & actual_front
         
+        if num_back:
+            pred_back = to_int_set(predicted[-num_back:], num_back)
+            actual_back = to_int_set(actual[-num_back:], num_back)
+            matched_back = pred_back & actual_back
+            return len(matched_front), len(matched_back)
+        else:
+            return len(matched_front)
 
-    def calculate_overall_hit_rate(self, lottery_type: str, start_issue: str, end_issue: str) -> Dict:
-        session = self.Session()
-        try:
-            predictions = session.execute(
-                select(PredictionResult).where(
-                    PredictionResult.lottery_type == lottery_type,
-                    PredictionResult.issue >= start_issue,
-                    PredictionResult.issue <= end_issue
-                )
-            ).scalars().all()
+    def determine_prize(self, lottery_type, matched_front, matched_back=None):
+        if lottery_type == 'ssq':  # 双色球
+            if matched_front == 6 and matched_back == 1:
+                return "一等奖"
+            elif matched_front == 6:
+                return "二等奖"
+            elif matched_front == 5 and matched_back == 1:
+                return "三等奖"
+            elif matched_front == 5 or (matched_front == 4 and matched_back == 1):
+                return "四等奖"
+            elif matched_front == 4 or (matched_front == 3 and matched_back == 1):
+                return "五等奖"
+            elif matched_back == 1:
+                return "六等奖"
+        
+        elif lottery_type == 'dlt':  # 大乐透
+            if matched_front == 5 and matched_back == 2:
+                return "一等奖"
+            elif matched_front == 5 and matched_back == 1:
+                return "二等奖"
+            elif matched_front == 5:
+                return "三等奖"
+            elif matched_front == 4 and matched_back == 2:
+                return "四等奖"
+            elif (matched_front == 4 and matched_back == 1) or (matched_front == 3 and matched_back == 2):
+                return "五等奖"
+            elif (matched_front == 4) or (matched_front == 3 and matched_back == 1) or (matched_front == 2 and matched_back == 2):
+                return "六等奖"
+            elif (matched_front == 3) or (matched_front == 2 and matched_back == 1) or (matched_front == 1 and matched_back == 2) or (matched_back == 2):
+                return "七等奖"
+        
+        elif lottery_type == 'kl8':  # 快乐8
+            total_matched = matched_front  # 快乐8只有前区
+            if 1 <= total_matched <= 10:
+                return f"{total_matched}中{total_matched}"
+            elif total_matched in [11, 12]:
+                return f"任{total_matched}中{total_matched}"
+            elif 15 <= total_matched <= 20:
+                return f"选{20}中{total_matched}"
+        
+        return "未中奖"
+        
+    def analyze_prediction(self, lottery_type, issue):
+        prediction = self.get_prediction(lottery_type, issue)
+        actual = self.get_actual_result(lottery_type, issue)
 
-            total_predictions = len(predictions)
-            hit_counts = {
-                "total": 0,
-                "red": 0,
-                "blue": 0,
-                "prize_levels": {}
-            }
+        if not prediction or not actual:
+            self.logger.error(f"无法获取 {lottery_type} 第 {issue} 期的预测或实际结果")
+            return
 
-            for prediction in predictions:
-                hit_rate = self.calculate_hit_rate(lottery_type, prediction.issue)
-                if hit_rate:
-                    hit_counts["total"] += hit_rate.get('total_hit_rate', 0)
-                    hit_counts["red"] += hit_rate.get('red_hit_rate', 0)
-                    hit_counts["blue"] += hit_rate.get('blue_hit_rate', 0)
-                    prize_level = hit_rate.get('prize_level', '未中奖')
-                    hit_counts["prize_levels"][prize_level] = hit_counts["prize_levels"].get(prize_level, 0) + 1
+        pred_numbers = prediction.front_numbers.split(',') + (prediction.back_numbers.split(',') if prediction.back_numbers else [])
 
-            overall_hit_rate = {
-                "total_hit_rate": hit_counts["total"] / total_predictions if total_predictions > 0 else 0,
-                "red_hit_rate": hit_counts["red"] / total_predictions if total_predictions > 0 else 0,
-                "blue_hit_rate": hit_counts["blue"] / total_predictions if total_predictions > 0 else 0,
-                "prize_level_distribution": {level: count / total_predictions for level, count in hit_counts["prize_levels"].items()}
-            }
+        if lottery_type =='ssq':
+            actual_numbers = [actual.red1, actual.red2, actual.red3, actual.red4, actual.red5, actual.red6, actual.blue]
+            matched_front, matched_back = self.compare_numbers(pred_numbers, actual_numbers, 6, 1)
+            prize = self.determine_prize('ssq', matched_front, matched_back)
 
-            return overall_hit_rate
+            result = f"双色球第 {issue} 期分析结果:\n"
+            result += f"预测号码: {prediction.front_numbers}, {prediction.back_numbers}\n"
+            result += f"实际号码: {','.join(actual_numbers[:-1])}, {actual_numbers[-1]}\n"
+            result += f"匹配结果: 红球 {matched_front}/6, 蓝球 {matched_back}/1\n"
+            result += f"中奖结果: {prize}\n"
 
-        except Exception as e:
-            self.logger.error(f"Error calculating overall hit rate: {e}")
-            return {}
-        finally:
-            session.close()
+            # 分析前 6、7、8 个红球
+            for i in range(6, 9):
+                matched = self.compare_numbers(pred_numbers, actual_numbers, i)
+                result += f"前{i}个红球匹配: {matched}/{i}\n"
 
-# config = load_config('config.yaml')  # 假设有一个加载配置的函数
-calculator = LotteryHitRateCalculator()
-single_hit_rate = calculator.calculate_hit_rate('dlt', '24081')
-print(single_hit_rate)
-overall_hit_rate = calculator.calculate_overall_hit_rate('dlt', '24081', '24081')
-print(overall_hit_rate)
+            # 分析前 2、3 个蓝球
+            for i in range(2, 4):
+                matched = self.compare_numbers(pred_numbers[-i:], actual_numbers[-i:], i)
+                result += f"前{i}个蓝球匹配: {matched}/{i}\n"
+
+        elif lottery_type == 'dlt':
+            actual_numbers = [actual.red1, actual.red2, actual.red3, actual.red4, actual.red5, actual.blue1, actual.blue2]
+            matched_front, matched_back = self.compare_numbers(pred_numbers, actual_numbers, 5, 2)
+            prize = self.determine_prize('dlt', matched_front, matched_back)
+
+            result = f"大乐透第 {issue} 期分析结果:\n"
+            result += f"预测号码: {prediction.front_numbers}, {prediction.back_numbers}\n"
+            result += f"实际号码: {','.join(actual_numbers[:5])}, {','.join(actual_numbers[5:])}\n"
+            result += f"匹配结果: 前区 {matched_front}/5, 后区 {matched_back}/2\n"
+            result += f"中奖结果: {prize}\n"
+
+            # 分析前 5、6、7 个前区号码
+            for i in range(5, 8):
+                matched = self.compare_numbers(pred_numbers, actual_numbers, i)
+                result += f"前区前{i}个号码匹配: {matched}/{i}\n"
+
+            # 分析前 2、3 个后区号码
+            for i in range(2, 4):
+                matched = self.compare_numbers(pred_numbers[-i:], actual_numbers[-i:], i)
+                result += f"后区前{i}个号码匹配: {matched}/{i}\n"
+
+        elif lottery_type == 'kl8':
+            actual_numbers = [getattr(actual, f'red{i}') for i in range(1, 21)]
+            matched = self.compare_numbers(pred_numbers, actual_numbers, 20)
+
+            result = f"快乐 8 第 {issue} 期分析结果:\n"
+            result += f"预测号码: {prediction.front_numbers}\n"
+            result += f"实际号码: {','.join(actual_numbers)}\n"
+            result += f"匹配结果: {matched}/20\n"
+
+            # 分析前 10、15、20 个号码
+            for i in [5,7,8,10, 15, 20]:
+                matched = self.compare_numbers(pred_numbers, actual_numbers, i)
+                result += f"前{i}个号码匹配: {matched}/{i}\n"
+
+        historical_matches = self.check_historical_matches(lottery_type, pred_numbers)
+        result += "历史匹配情况：\n"
+        for match in historical_matches:
+            result += str(match) + '\n'
+
+        return result
+        
+    
+    def check_historical_matches(self, lottery_type, predicted_numbers, limit=5):
+            table = {'ssq': SSQ, 'dlt': DLT, 'kl8': KL8}[lottery_type]
+            
+            # 根据彩票类型确定前区和后区号码数量及列名
+            if lottery_type == 'ssq':
+                front_count, back_count = 6, 1
+                front_cols = [f'red{i}' for i in range(1, front_count + 1)]
+                back_cols = ['blue']
+            elif lottery_type == 'dlt':
+                front_count, back_count = 5, 2
+                front_cols = [f'red{i}' for i in range(1, front_count + 1)]
+                back_cols = [f'blue{i}' for i in range(1, back_count + 1)]
+            elif lottery_type == 'kl8':
+                front_count, back_count = 20, 0
+                front_cols = [f'red{i}' for i in range(1, front_count + 1)]
+                back_cols = []
+            
+            pred_front = set(int(num) for num in predicted_numbers[:front_count])
+            pred_back = set(int(num) for num in predicted_numbers[-back_count:]) if back_count > 0 else set()
+            
+            # 构建查询
+            columns = [getattr(table, col) for col in front_cols + back_cols]
+            
+            stmt = select(table.issue, *columns)
+            results = self.session.execute(stmt).fetchall()
+            
+            matches = []
+            max_front_match = 0
+            max_back_match = 0
+            for result in results:
+                issue = result[0]
+                actual_front = set(map(int, result[1:front_count + 1]))
+                actual_back = set(map(int, result[front_count + 1:])) if back_count > 0 else set()
+
+                front_match = len(pred_front & actual_front)
+                back_match = len(pred_back & actual_back) if back_count > 0 else 0
+
+                if front_match > max_front_match or (front_match == max_front_match and back_match > max_back_match):
+                    max_front_match = front_match
+                    max_back_match = back_match
+                    matches = [(issue, front_match, back_match)]
+                elif front_match == max_front_match and back_match == max_back_match:
+                    matches.append((issue, front_match, back_match))
+            
+            # 按匹配百分比排序，返回前limit个结果
+            return matches
+
+    def run_analysis(self, lottery_type, start_issue, end_issue):
+        for issue in range(int(start_issue), int(end_issue) + 1):
+            result = self.analyze_prediction(lottery_type, str(issue))
+            return result
+
+if __name__ == "__main__":
+    analyzer = LotteryAnalysis('config.yaml')
+    pre = analyzer.get_latest_issue_prediction('dlt')
+    pred_numbers = pre.front_numbers.split(',') + (pre.back_numbers.split(',') if pre.back_numbers else [])
+    historical_matches = analyzer.check_historical_matches('dlt', pred_numbers)
+    print(historical_matches)
+    print(pred_numbers)
+    result = analyzer.run_analysis('dlt', '24082', '24083')
+    print(result)
+
+    # 邮件配置
+    sender_email = "wenlin_x@163.com"
+    sender_password = "DFOZWXHXIQFKITDP"
+    recipient_email = "wenlin.xie@foxmail.com"
+    subject = "彩票分析结果"
+
+    email.send_lottery_email(sender_email, sender_password, recipient_email, subject, historical_matches, pred_numbers, result)
+    
+    # analyzer.run_analysis('ssq', '24082', '24083')
+    # analyzer.run_analysis('kl8', '2024191', '2024192')

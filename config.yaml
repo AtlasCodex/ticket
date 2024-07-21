@@ -3,7 +3,7 @@ names:
   - dlt
   - kl8
 start: 03001
-end: 99999
+end: 999999999
 base_url: "https://datachart.500.com/{name}/history/newinc/history.php"
 
 logging:

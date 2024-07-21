@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 00:12:31
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-17 18:37:00
+LastEditTime: 2024-07-20 14:10:57
 FilePath: /ticket/data/model.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -19,6 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import os
+from logger import Logger
 
 class LotteryPredictionModel:
     def __init__(self, config_path='config.yaml'):
@@ -26,6 +27,7 @@ class LotteryPredictionModel:
         self.setup_gpu()
         self.model = None
         self.scaler = MinMaxScaler()
+        self.logger = Logger(config_path)
 
     def load_config(self, config_path):
         with open(config_path, 'r') as file:
@@ -39,7 +41,7 @@ class LotteryPredictionModel:
                 for gpu in gpus:
                     tf.config.experimental.set_memory_growth(gpu, True)
             except RuntimeError as e:
-                print(e)
+                self.logger.error(e)
 
     def create_sequences(self, data, window_size):
         X, y = [], []
@@ -99,9 +101,10 @@ class LotteryPredictionModel:
         val_loss, val_acc = self.model.evaluate(X_val, y_val, verbose=0)
         test_loss, test_acc = self.model.evaluate(X_test, y_test, verbose=0)
 
-        print(f"训练集准确率: {train_acc:.4f}")
-        print(f"验证集准确率: {val_acc:.4f}")
-        print(f"测试集准确率: {test_acc:.4f}")
+
+        self.logger.info(f"训练集准确率: {train_acc:.4f}")
+        self.logger.info(f"验证集准确率: {val_acc:.4f}")
+        self.logger.info(f"测试集准确率: {test_acc:.4f}")
 
     def save_model(self, lottery_type):
         model_params = self.config['model_params'][lottery_type]

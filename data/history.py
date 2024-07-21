@@ -17,6 +17,11 @@ class PredictionResult(Base):
     front_numbers = Column(String, nullable=False)
     back_numbers = Column(String)
     probabilities = Column(String, nullable=False)
+    
+    # 添加 UNIQUE 约束
+    __table_args__ = (
+        UniqueConstraint('lottery_type', 'issue', name='unique_lottery_issue'),
+    )
 
 class LotteryPredictionStorage:
     def __init__(self, config_path='config.yaml'):
@@ -54,7 +59,7 @@ class LotteryPredictionStorage:
 
             session.execute(stmt)
             session.commit()
-            self.logger.info(f"Saved prediction for {lottery_type} issue {issue}")
+            self.logger.info(f"Saved prediction for {lottery_type} issue {issue}, front numbers: {front_numbers_str}, back numbers: {back_numbers_str}, probabilities: {probabilities_str}")
         except Exception as e:
             self.logger.error(f"Error saving prediction: {e}")
             session.rollback()
@@ -88,20 +93,19 @@ class LotteryPredictionStorage:
         else:
             raise ValueError(f"Unknown lottery type: {lottery_type}")
         
-        # 如果没有最后预测的期号，从最早的期号开始预测
-        if last_predicted_issue is None:
-            start_issue = latest_issue
-        else:
-            start_issue = str(int(last_predicted_issue) + 1).zfill(5)
-
+        # # 如果没有最后预测的期号，从最早的期号开始预测
+        # if last_predicted_issue is None:
+        start_issue = str(int(latest_issue) + 1).zfill(5)
+        # else:
+        #     start_issue = str(int(latest_issue) + 1).zfill(5)
         current_issue = start_issue
-        while current_issue <= latest_issue:
-            self.logger.info(f"Predicting {lottery_type} issue {current_issue}")
+    
+        self.logger.info(f"Predicting {lottery_type} issue {current_issue}")
             
             # 进行预测
-            results = self.predictor.run_prediction(lottery_type, matrix)
+        results = self.predictor.run_prediction(lottery_type, matrix)
             
-            for _, front_numbers, back_numbers, prob_info in results:
+        for _, front_numbers, back_numbers, prob_info in results:
                 # 解析概率信息
                 probabilities = []
                 for line in prob_info[1:]:  # 跳过第一行的标题
@@ -115,7 +119,7 @@ class LotteryPredictionStorage:
                 self.save_prediction(lottery_type, current_issue, front_numbers, back_numbers, probabilities)
             
             # 更新期号
-            current_issue = str(int(current_issue) + 1).zfill(5)
+        current_issue = str(int(current_issue) + 1).zfill(5)
 
         self.logger.info(f"Completed predictions for {lottery_type}")
 

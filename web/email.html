@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩票分析结果</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }}
+        .container {{
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        h1, h2 {{
+            color: #2c3e50;
+        }}
+        .result-box {{
+            background-color: #ecf0f1;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+        }}
+        .highlight {{
+            color: #e74c3c;
+            font-weight: bold;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }}
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }}
+        th {{
+            background-color: #3498db;
+            color: white;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>彩票分析结果</h1>
+
+        <div class="result-box">
+            <h2>历史匹配情况</h2>
+            <p>{historical_matches}</p>
+        </div>
+
+        <div class="result-box">
+            <h2>预测号码</h2>
+            <p class="highlight">{pred_numbers}</p>
+        </div>
+
+        <h2>大乐透第 {issue_number} 期分析结果</h2>
+        <table>
+            <tr>
+                <th>项目</th>
+                <th>结果</th>
+            </tr>
+            <tr>
+                <td>预测号码</td>
+                <td>{predicted_numbers}</td>
+            </tr>
+            <tr>
+                <td>实际号码</td>
+                <td>{actual_numbers}</td>
+            </tr>
+            <tr>
+                <td>匹配结果</td>
+                <td>{match_result}</td>
+            </tr>
+            <tr>
+                <td>中奖结果</td>
+                <td class="highlight">{win_result}</td>
+            </tr>
+        </table>
+
+        <h3>详细匹配情况</h3>
+        <ul>
+            {detailed_matches}
+        </ul>
+
+        <div class="result-box">
+            <h3>历史匹配情况</h3>
+            <p>{historical_match}</p>
+        </div>
+    </div>
+</body>
+</html>

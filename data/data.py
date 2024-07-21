@@ -73,5 +73,3 @@ def create_matrix_from_db(name, config_path='config.yaml'):
 if __name__ == '__main__':
 # 使用示例
     matrix = create_matrix_from_db('dlt')
-    print(matrix.shape)
-    print(matrix[0])
