@@ -3,7 +3,7 @@
  # @Author: AtlasCodex wenlin.xie@outlook.com
  # @Date: 2024-07-04 11:02:49
  # @LastEditors: AtlasCodex wenlin.xie@outlook.com
- # @LastEditTime: 2024-07-21 14:20:12
+ # @LastEditTime: 2024-07-22 19:52:51
  # @FilePath: /god/build.sh
  # @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 ###
@@ -15,7 +15,7 @@ DOCKER_FILE_PATH="./Dockerfile"
 SERVER_USER="root"
 SERVER_IP="116.198.244.213"
 SERVER_PATH="/root/dockerImages"
-CONTAINER_NAME="lottery-container"
+CONTAINER_NAME="ticket-container"
 CONTAINER_PORT="8081"
 HOST_PORT="81"
 SSH_KEY_PATH="/Users/lin/dockerimages.pem" # 添加密钥文件路径

@@ -222,7 +222,7 @@ class LotteryAnalysis:
             return matches
 
     def run_analysis(self, lottery_type, start_issue, end_issue):
-        for issue in range(int(start_issue), int(end_issue) + 1):
+        for issue in range(int(start_issue) - 1, int(end_issue)):
             result = self.analyze_prediction(lottery_type, str(issue))
             return result
 
@@ -231,10 +231,7 @@ if __name__ == "__main__":
     pre = analyzer.get_latest_issue_prediction('dlt')
     pred_numbers = pre.front_numbers.split(',') + (pre.back_numbers.split(',') if pre.back_numbers else [])
     historical_matches = analyzer.check_historical_matches('dlt', pred_numbers)
-    print(historical_matches)
-    print(pred_numbers)
     result = analyzer.run_analysis('dlt', '24082', '24083')
-    print(result)
 
     # 邮件配置
     sender_email = "wenlin_x@163.com"
@@ -243,6 +240,3 @@ if __name__ == "__main__":
     subject = "彩票分析结果"
 
     email.send_lottery_email(sender_email, sender_password, recipient_email, subject, historical_matches, pred_numbers, result)
-    
-    # analyzer.run_analysis('ssq', '24082', '24083')
-    # analyzer.run_analysis('kl8', '2024191', '2024192')

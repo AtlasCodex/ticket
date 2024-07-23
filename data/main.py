@@ -2,10 +2,11 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-21 14:34:13
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-21 14:54:02
+LastEditTime: 2024-07-22 19:54:29
 FilePath: /ticket/main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
+import base64
 import schedule
 import time
 import yaml
@@ -42,18 +43,28 @@ def run(config,name):
     storage.run_predictions(name)
 
 def sendReport(config,name):
-    analyzer = LotteryAnalysis(config)
+    analyzer = LotteryAnalysis('config.yaml')
     pre = analyzer.get_latest_issue_prediction(name)
     pred_numbers = pre.front_numbers.split(',') + (pre.back_numbers.split(',') if pre.back_numbers else [])
-    result = analyzer.run_analysis(name, pre.issue-1, pre.issue)
+    result = analyzer.run_analysis(name, pre.issue, pre.issue)
     historical_matches = analyzer.check_historical_matches(name, pred_numbers)
-    # 邮件配置
-    sender_email = "wenlin_x@163.com"
-    sender_password = "DFOZWXHXIQFKITDP"
-    recipient_email = "wenlin.xie@foxmail.com"
-    subject = f"{pre.issue}彩票分析结果"
 
-    email.send_lottery_email(sender_email, sender_password, recipient_email, subject, historical_matches, pred_numbers, result)
+    # 读取训练绘制图并转换为 base64
+    plot_path = config['model_params'][name]['plot_save_path']
+    with open(plot_path, "rb") as image_file:
+        training_plot = base64.b64encode(image_file.read()).decode('utf-8')
+    # 邮件配置
+    sender_email = config['email']['sender']
+    sender_password = config['email']['password']
+    recipient_email = config['email']['recipient']
+    if name == 'dlt':
+        subject = f"大乐透{pre.issue} 彩票分析结果"
+    elif name == 'ssq':
+        subject = f"双色球{pre.issue} 彩票分析结果"
+    elif name == 'kl8':
+        subject = f"快乐8{pre.issue} 彩票分析结果"
+
+    email.send_lottery_email(sender_email, sender_password, recipient_email, name,subject, historical_matches, pre.front_numbers, pre.back_numbers, result,training_plot)
     
 
 # 定义每周 1、3、6 运行的任务
@@ -72,15 +83,15 @@ def task_everyday():
     sendReport(load_config('config.yaml'),'kl8')
 
 # 设置定时任务
-schedule.every().monday.at("15:00").do(task_136)
-schedule.every().wednesday.at("15:00").do(task_136)
-schedule.every().saturday.at("15:00").do(task_136)
+schedule.every().monday.at("12:00").do(task_136)
+schedule.every().wednesday.at("12:00").do(task_136)
+schedule.every().saturday.at("12:00").do(task_136)
 
-schedule.every().tuesday.at("15:00").do(task_247)
-schedule.every().thursday.at("15:00").do(task_247)
-schedule.every().sunday.at("15:00").do(task_247)
+schedule.every().tuesday.at("12:00").do(task_247)
+schedule.every().thursday.at("12:00").do(task_247)
+schedule.every().sunday.at("12:08").do(task_247)
 
-schedule.every().day.at("16:00").do(task_everyday)
+schedule.every().day.at("13:00").do(task_everyday)
 
 while True:
     schedule.run_pending()

@@ -5,65 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>彩票分析结果</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
         body {{
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
         }}
         .container {{
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
             background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }}
-        h1, h2 {{
+        h1, h2, h3 {{
             color: #2c3e50;
+            margin-top: 0;
+        }}
+        h1 {{
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
         .result-box {{
-            background-color: #ecf0f1;
-            border-left: 5px solid #3498db;
-            padding: 15px;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }}
+        .result-box:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }}
+        .training-plot {{
+            max-width: 100%;
+            height: auto;
             margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }}
         .highlight {{
             color: #e74c3c;
             font-weight: bold;
+            /* 字体调整大小 */
+            font-size: 3.2em;
         }}
         table {{
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-bottom: 30px;
         }}
         th, td {{
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            background-color: #f8f9fa;
+            border-radius: 5px;
         }}
         th {{
-            background-color: #3498db;
-            color: white;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+        }}
+        tr:hover td {{
+            background-color: #e9ecef;
+            transition: background-color 0.3s ease;
+        }}
+        ul {{
+            list-style-type: none;
+            padding-left: 0;
+        }}
+        li {{
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }}
+        li:hover {{
+            transform: translateX(5px);
+            background-color: #e9ecef;
+        }}
+        .prediction {{
+            font-size: 1.5em;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: #ffffff;
+            border-radius: 10px;
+            margin-bottom: 30px;
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>彩票分析结果</h1>
+        <h1>{title}</h1>
+        <div class="prediction">
+            <h2>预测号码</h2>
+            <p class="highlight">{front_numbers} + {back_numbers}</p>
+        </div>
 
         <div class="result-box">
             <h2>历史匹配情况</h2>
             <p>{historical_matches}</p>
         </div>
 
-        <div class="result-box">
-            <h2>预测号码</h2>
-            <p class="highlight">{pred_numbers}</p>
-        </div>
+        
 
-        <h2>大乐透第 {issue_number} 期分析结果</h2>
+        <h2>{name}第 {issue_number} 期分析结果</h2>
         <table>
             <tr>
                 <th>项目</th>
@@ -93,8 +153,8 @@
         </ul>
 
         <div class="result-box">
-            <h3>历史匹配情况</h3>
-            <p>{historical_match}</p>
+            <h3>训练绘制图</h3>
+            <img class="training-plot" src="data:image/png;base64,{training_plot}" alt="Training Plot">
         </div>
     </div>
 </body>
