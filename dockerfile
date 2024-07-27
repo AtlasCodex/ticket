@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/*
 # 设置工作目录
 WORKDIR /app
 
+# 设置中国时间
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 # 复制第一阶段安装的Python依赖
 COPY --from=build /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=build /usr/local/bin /usr/local/bin

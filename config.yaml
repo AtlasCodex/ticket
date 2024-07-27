@@ -17,41 +17,41 @@ database:
 
 model_params:
   ssq:
-    window_size: 5
-    lstm_units_1: 200
-    lstm_units_2: 100
-    dropout_rate: 0.4
+    window_size: 3
+    lstm_units_1: 49
+    lstm_units_2: 49
+    dropout_rate: 0.5
     output_units: 49
     learning_rate: 0.0001
-    batch_size: 32
-    epochs: 1000
-    patience: 50
+    batch_size: 64
+    epochs: 600
+    patience: 30
     bestmodel_paths: 'model/best_ssq_model.h5'
     finalmodel_paths: 'model/final_ssq_model.h5'
     plot_save_path: 'static/images/ssq_accuracy_plot.png'
   dlt:
-    window_size: 5
-    lstm_units_1: 200
-    lstm_units_2: 100
-    dropout_rate: 0.4
+    window_size: 3
+    lstm_units_1: 47
+    lstm_units_2: 47
+    dropout_rate: 0.5
     output_units: 47
     learning_rate: 0.0001
-    batch_size: 32
-    epochs: 1000
-    patience: 50
+    batch_size: 64
+    epochs: 600
+    patience: 30
     bestmodel_paths: 'model/best_dlt_model.h5'
     finalmodel_paths: 'model/final_dlt_model.h5'
     plot_save_path: 'static/images/dlt_accuracy_plot.png'
   kl8:
-    window_size: 5
-    lstm_units_1: 200
-    lstm_units_2: 100
-    dropout_rate: 0.5
+    window_size: 3
+    lstm_units_1: 80
+    lstm_units_2: 80
+    dropout_rate: 0.4
     output_units: 80
     learning_rate: 0.0001
-    batch_size: 32
-    epochs: 1000
-    patience: 50
+    batch_size: 64
+    epochs: 800
+    patience: 30
     bestmodel_paths: 'model/best_kl8_model.h5'
     finalmodel_paths: 'model/final_kl8_model.h5'
     plot_save_path: 'static/images/kl8_accuracy_plot.png'

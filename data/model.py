@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-02 00:12:31
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-20 14:10:57
+LastEditTime: 2024-07-24 18:43:35
 FilePath: /ticket/data/model.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -14,6 +14,7 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.optimizers import Adam
@@ -62,15 +63,19 @@ class LotteryPredictionModel:
     def build_model(self, input_shape, lottery_type):
         model_params = self.config['model_params'][lottery_type]
         model = Sequential([
-            LSTM(model_params['lstm_units_1'], activation='relu', return_sequences=True, input_shape=input_shape),
+            LSTM(model_params['lstm_units_1'], activation='relu', return_sequences=True, input_shape=input_shape, kernel_regularizer=l2(0.01), recurrent_regularizer=l2(0.01)),
             BatchNormalization(),
             Dropout(model_params['dropout_rate']),
-            LSTM(model_params['lstm_units_2'], activation='relu'),
+            LSTM(model_params['lstm_units_2'], activation='relu',kernel_regularizer=l2(0.01), recurrent_regularizer=l2(0.01)),
             BatchNormalization(),
             Dropout(model_params['dropout_rate']),
-            Dense(model_params['output_units'], activation='sigmoid')
+            Dense(model_params['output_units'], activation='sigmoid',kernel_regularizer=l2(0.01))
         ])
-        optimizer = Adam(learning_rate=model_params['learning_rate'])
+        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=0.00001,
+        decay_steps=10000,
+        decay_rate=0.9)
+        optimizer = Adam(learning_rate=lr_schedule)
         model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
         return model
 
@@ -137,7 +142,6 @@ class LotteryPredictionModel:
         # Save the plot
         plt.savefig(save_path)
         plt.close()
-
 # 使用示例
 if __name__ == "__main__":
     model = LotteryPredictionModel()

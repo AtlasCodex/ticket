@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-21 14:34:13
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-22 19:54:29
+LastEditTime: 2024-07-28 00:27:38
 FilePath: /ticket/main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -19,6 +19,10 @@ import yaml
 from  predict import LotteryPredictor
 from  report import LotteryAnalysis
 import pyemail as email
+import schedule
+import time
+import os
+from datetime import datetime, time as dt_time
 
 # 初始化日志
 logger = Logger("config.yaml").logger
@@ -65,33 +69,41 @@ def sendReport(config,name):
         subject = f"快乐8{pre.issue} 彩票分析结果"
 
     email.send_lottery_email(sender_email, sender_password, recipient_email, name,subject, historical_matches, pre.front_numbers, pre.back_numbers, result,training_plot)
-    
 
-# 定义每周 1、3、6 运行的任务
-def task_136():
-    run(load_config('config.yaml'),'dlt')
-    sendReport(load_config('config.yaml'),'dlt')
+# 记录任务的最后执行时间
+last_run_times = {
+    'dlt': None,
+    'ssq': None,
+    'kl8': None
+}
 
-# 定义每周 2、4、7 运行的任务
-def task_247():
-    run(load_config('config.yaml'),'ssq')
-    sendReport(load_config('config.yaml'),'ssq')
+# # 定义每周 1、3、6 运行的任务
+def combined_task():
+    today = datetime.today().weekday()
+    current_time = datetime.now()
+    if today in [0, 2, 5]:  # 周一、周三、周六
+        if last_run_times['ssq'] is None or (current_time - last_run_times['ssq']).days >= 1:
+            run(load_config('config.yaml'),'dlt')
+            sendReport(load_config('config.yaml'),'dlt')
+            last_run_times['ssq'] = current_time
+    elif today in [1, 3, 6]:  # 周二、周四、周日
+        if last_run_times['dlt'] is None or (current_time - last_run_times['dlt']).days >= 1:
+            run(load_config('config.yaml'),'ssq')
+            sendReport(load_config('config.yaml'),'ssq')
+            last_run_times['dlt'] = current_time # 每天
+    if last_run_times['kl8'] is None or (current_time - last_run_times['kl8']).days >= 1:
+            run(load_config('config.yaml'),'kl8')
+            sendReport(load_config('config.yaml'),'kl8')
+            last_run_times['kl8'] = current_time
 
-# 定义每天都运行的任务
-def task_everyday():
-    run(load_config('config.yaml'),'kl8')
-    sendReport(load_config('config.yaml'),'kl8')
+# 设置在12:00执行的函数
+def run_at_specific_time():
+    current_time = datetime.now().time()
+    if dt_time(1, 30) <= current_time < dt_time(1,  33):
+        combined_task()
 
-# 设置定时任务
-schedule.every().monday.at("12:00").do(task_136)
-schedule.every().wednesday.at("12:00").do(task_136)
-schedule.every().saturday.at("12:00").do(task_136)
-
-schedule.every().tuesday.at("12:00").do(task_247)
-schedule.every().thursday.at("12:00").do(task_247)
-schedule.every().sunday.at("12:08").do(task_247)
-
-schedule.every().day.at("13:00").do(task_everyday)
+# 每分钟检查一次是否到达指定时间
+schedule.every().minute.do(run_at_specific_time)
 
 while True:
     schedule.run_pending()
