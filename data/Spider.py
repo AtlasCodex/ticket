@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-01 16:49:49
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-20 14:18:47
+LastEditTime: 2024-07-30 23:44:57
 FilePath: /ticket/Spider.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -152,7 +152,10 @@ class LotterySpider:
         try:
             session = self.Session()
             inserted_or_updated_count = 0
-            for entry in data: 
+            for entry in data:
+                # 将号码从'01', '02'转换为1, 2
+                entry = [int(num) if isinstance(num, str) and num.isdigit() else num for num in entry]
+
                 if name == 'ssq':
                     record = SSQ(
                         issue=entry[0], red1=entry[1], red2=entry[2], red3=entry[3], red4=entry[4], red5=entry[5], red6=entry[6], blue=entry[7], happy_sunday=entry[8],
@@ -169,14 +172,14 @@ class LotterySpider:
                     record = KL8(
                         # 1-20号红球
                         issue=entry[0], red1=entry[1], red2=entry[2], red3=entry[3], red4=entry[4], red5=entry[5],
-                        red6=entry[6], red7=entry[7], red8=entry[8], red9=entry[9], red10=entry[10],red11=entry[11],
+                        red6=entry[6], red7=entry[7], red8=entry[8], red9=entry[9], red10=entry[10], red11=entry[11],
                         red12=entry[12], red13=entry[13], red14=entry[14], red15=entry[15], red16=entry[16], red17=entry[17],
                         red18=entry[18], red19=entry[19], red20=entry[20]
                     )
                 else:
                     self.logger.error(f"Unknown name: {name}")
                     continue
-                
+
                 # 检查是否已经存在具有相同 issue 的记录
                 existing_record = session.query(SSQ if name == 'ssq' else DLT if name == 'dlt' else KL8).filter_by(issue=entry[0]).first()
                 if existing_record:
@@ -187,7 +190,7 @@ class LotterySpider:
                 else:
                     # 插入新记录
                     session.add(record)
-                
+
                 inserted_or_updated_count += 1
             session.commit()
             self.logger.info(f"Inserted or updated {inserted_or_updated_count} records.")

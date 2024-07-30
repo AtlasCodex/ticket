@@ -24,7 +24,7 @@ model_params:
     output_units: 49
     learning_rate: 0.0001
     batch_size: 64
-    epochs: 600
+    epochs: 1000
     patience: 30
     bestmodel_paths: 'model/best_ssq_model.h5'
     finalmodel_paths: 'model/final_ssq_model.h5'
@@ -37,7 +37,7 @@ model_params:
     output_units: 47
     learning_rate: 0.0001
     batch_size: 64
-    epochs: 600
+    epochs: 1000
     patience: 30
     bestmodel_paths: 'model/best_dlt_model.h5'
     finalmodel_paths: 'model/final_dlt_model.h5'
@@ -50,7 +50,7 @@ model_params:
     output_units: 80
     learning_rate: 0.0001
     batch_size: 64
-    epochs: 800
+    epochs: 1600
     patience: 30
     bestmodel_paths: 'model/best_kl8_model.h5'
     finalmodel_paths: 'model/final_kl8_model.h5'

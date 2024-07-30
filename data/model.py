@@ -125,7 +125,7 @@ class LotteryPredictionModel:
         return history
 
     def plot_accuracy(self, history, lottery_type):
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(24, 12))
         plt.plot(history.history['accuracy'], label='Training Accuracy')
         plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
         plt.title(f'{lottery_type.upper()} Model Accuracy')

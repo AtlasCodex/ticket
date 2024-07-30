@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-21 14:00:38
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-24 11:02:37
+LastEditTime: 2024-07-28 13:40:21
 FilePath: /ticket/data/pyemail.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -21,7 +21,12 @@ def send_lottery_email(sender_email, sender_password, recipient_email,name, subj
     # 格式化预测号码
     # formatted_pred_numbers = '｜'.join(pred_numbers)
     # 解析结果字符串
-    result_lines = result.split('\n')
+    try:
+        result_lines = result.split('\n')
+    except AttributeError:
+        # 当 result 为 None 时的处理逻辑
+        print("Result is None. Unable to split.")
+        result_lines = []  # 或者根据您的实际需求进行其他处理
     
     # 格式化详细匹配情况
     detailed_matches = result_lines[5:-1]  # 假设详细匹配情况从第6行开始，除去最后一行

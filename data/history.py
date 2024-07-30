@@ -1,3 +1,4 @@
+from re import L
 from sqlalchemy import create_engine, Column, Integer, String, Float,UniqueConstraint
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.declarative import declarative_base
@@ -103,7 +104,9 @@ class LotteryPredictionStorage:
         self.logger.info(f"Predicting {lottery_type} issue {current_issue}")
             
             # 进行预测
+        self.logger.info(f"Predicting {lottery_type} issue {current_issue} matrix: {matrix}")
         results = self.predictor.run_prediction(lottery_type, matrix)
+        self.logger.info(f"Predicted {lottery_type} issue {current_issue} results: {results}")
             
         for _, front_numbers, back_numbers, prob_info in results:
                 # 解析概率信息

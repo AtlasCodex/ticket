@@ -2,7 +2,7 @@
 Author: AtlasCodex wenlin.xie@outlook.com
 Date: 2024-07-21 14:34:13
 LastEditors: AtlasCodex wenlin.xie@outlook.com
-LastEditTime: 2024-07-28 00:27:38
+LastEditTime: 2024-07-31 00:28:57
 FilePath: /ticket/main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -81,25 +81,26 @@ last_run_times = {
 def combined_task():
     today = datetime.today().weekday()
     current_time = datetime.now()
+    if last_run_times['kl8'] is None or (current_time - last_run_times['kl8']).days >= 1:
+            run(load_config('config.yaml'),'kl8')
+            sendReport(load_config('config.yaml'),'kl8')
+            last_run_times['kl8'] = current_time
     if today in [0, 2, 5]:  # 周一、周三、周六
         if last_run_times['ssq'] is None or (current_time - last_run_times['ssq']).days >= 1:
             run(load_config('config.yaml'),'dlt')
             sendReport(load_config('config.yaml'),'dlt')
             last_run_times['ssq'] = current_time
-    elif today in [1, 3, 6]:  # 周二、周四、周日
+    if today in [1, 3, 6]:  # 周二、周四、周日
         if last_run_times['dlt'] is None or (current_time - last_run_times['dlt']).days >= 1:
             run(load_config('config.yaml'),'ssq')
             sendReport(load_config('config.yaml'),'ssq')
             last_run_times['dlt'] = current_time # 每天
-    if last_run_times['kl8'] is None or (current_time - last_run_times['kl8']).days >= 1:
-            run(load_config('config.yaml'),'kl8')
-            sendReport(load_config('config.yaml'),'kl8')
-            last_run_times['kl8'] = current_time
+    
 
 # 设置在12:00执行的函数
 def run_at_specific_time():
     current_time = datetime.now().time()
-    if dt_time(1, 30) <= current_time < dt_time(1,  33):
+    if dt_time(00, 40) <= current_time < dt_time(00,  44):
         combined_task()
 
 # 每分钟检查一次是否到达指定时间
